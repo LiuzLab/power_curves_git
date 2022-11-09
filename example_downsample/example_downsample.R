@@ -25,7 +25,7 @@ Genotype <- factor(id.info[,"Genotype"])
 effectiveN <- min(length(which(id.info$Genotype == num)),length(which(id.info$Genotype == denom)))
 
 #make empty results df to fill #we will also write individual deseq results out to files for reference and flexibility of use
-downsample_df <- data.frame(gene=row.names(Counts))
+downsample_df <- data.frame(Gene_ID=row.names(Counts))
 
 #loop for number of samples to cut (cut) and then number of reps to perform (rep)
 for(i in 1:cut){
@@ -63,22 +63,23 @@ for(i in 1:cut){
     
     res.nullVSWT_v1 <- results(dds.good, contrast=c("genotype",num,denom))
     name <- paste0(num,"VS",denom)
-    colnames(res.nullVSWT_v1) <- paste(name, colnames(res.nullVSWT_v1), sep = "_")
+    #column  naming
+    #colnames(res.nullVSWT_v1) <- paste(name, colnames(res.nullVSWT_v1), sep = "_")
     grp.mean <- sapply(levels(dds.good$genotype), function(lvl) rowMeans(counts(dds.good, normalized=TRUE)[,dds.good$genotype == lvl] ) )
     colnames(grp.mean)
     
     norm.counts <- counts(dds.good, normalized=TRUE)
     res.nullVSWT <- data.frame(res.nullVSWT_v1)
     all <- data.frame(res.nullVSWT, grp.mean, norm.counts)
-    all <- data.frame(gene=rownames(all), all)
+    all <- data.frame(Gene_ID=rownames(all), all)
     
     #make sure to rename columns to work smoothly with tool
     write.table(all, file=paste0("./results/DEG_n_of_",keep,"_rep_",j,".txt"), row.names = F, sep="\t",quote=F)
     
     #only keep a few relevant columns
     mervec <- all[c(1,3,7)]
-    names(mervec) <- gsub(name,paste0("n",keep,"_rep",j),names(mervec))
-    downsample_df <- merge(mervec,downsample_df,by="gene",all=T)
+    names(mervec)[2:3] <- paste(paste0(names(mervec)[2:3],"_n",keep,"_rep",j))
+    downsample_df <- merge(mervec,downsample_df,by="Gene_ID",all=T)
   }   
 }
 
